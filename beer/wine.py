@@ -7,16 +7,20 @@ working Wine onto the machine and drive it so you never have to touch a terminal
 import glob
 import json
 import os
+import platform
 import re
+import shlex
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import urllib.request
 
 from . import system
 
 GCENX_RELEASES_API = "https://api.github.com/repos/Gcenx/macOS_Wine_builds/releases?per_page=30"
+HANGOVER_RELEASES_API = "https://api.github.com/repos/AndreRH/hangover/releases?per_page=10"
 WINETRICKS_URL = "https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks"
 
 # On macOS these are the places a Wine.app bundle may live.
@@ -193,30 +197,97 @@ def linux_install_steps(pm):
     return []
 
 
-NEEDS_ROOT = {"apt-get", "dnf", "yum", "pacman", "zypper", "apk", "xbps-install", "emerge",
-              "eopkg", "swupd", "urpmi", "pkg", "dpkg", "/usr/local/share/wine/pkg32.sh"}
+def steps_to_script(steps):
+    """Turn install steps into one shell script, so the password is only asked once."""
+    lines = ["set -u", "export DEBIAN_FRONTEND=noninteractive"]
+    for alternatives in steps:
+        tries = ["{ %s; }" % " ".join(shlex.quote(a) for a in cmd) for cmd in alternatives]
+        lines.append(" || ".join(tries) + " || exit 1")
+    return "\n".join(lines) + "\n"
+
+
+def run_as_root(script, log=None):
+    """Run a shell script as root, asking for the password the friendliest way available.
+
+    In a terminal that's sudo/doas. When Beer was started from the app menu (no
+    terminal), it's a password dialog: pkexec on Linux/FreeBSD desktops, the
+    standard administrator prompt on macOS.
+    """
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        cmd = ["sh", "-c", script]
+    elif sys.stdin is not None and sys.stdin.isatty() and system.sudo_prefix():
+        cmd = system.sudo_prefix() + ["sh", "-c", script]
+    elif system.is_macos():
+        apple = 'do shell script "sh -c " & quoted form of %s with administrator privileges' % (
+            json.dumps(script))
+        cmd = ["osascript", "-e", apple]
+    elif system.which("pkexec"):
+        cmd = ["pkexec", "sh", "-c", script]
+    elif system.sudo_prefix():
+        cmd = system.sudo_prefix() + ["sh", "-c", script]
+    else:
+        _log(log, "Administrator rights are needed, but sudo, doas and pkexec were not found. "
+                  "Open a terminal as root and run: beer install-wine")
+        return False
+    try:
+        return subprocess.call(cmd) == 0
+    except OSError as exc:
+        _log(log, "  failed: %s" % exc)
+        return False
 
 
 def _run_steps(steps, log, dry_run=False):
-    sudo = system.sudo_prefix()
-    for alternatives in steps:
-        ok = False
-        for cmd in alternatives:
-            if cmd[0] in NEEDS_ROOT:
-                cmd = sudo + cmd
-            _log(log, "$ " + " ".join(cmd))
-            if dry_run:
-                ok = True
-                break
-            try:
-                if subprocess.call(cmd) == 0:
-                    ok = True
-                    break
-            except OSError as exc:
-                _log(log, "  failed: %s" % exc)
-        if not ok:
-            return False
-    return True
+    script = steps_to_script(steps)
+    for line in script.splitlines()[2:]:
+        _log(log, "$ " + line)
+    if dry_run:
+        return True
+    return run_as_root(script, log)
+
+
+# --------------------------------------------------------------------------- ARM Linux
+
+def is_arm_linux():
+    return system.os_name() in ("linux", "freebsd") and platform.machine().lower() in (
+        "aarch64", "arm64", "armv8l", "armv7l")
+
+
+def pick_hangover_asset(releases, codename):
+    """Pick the Hangover (Wine + FEX x86 emulation for ARM64) .deb bundle for this distro."""
+    if not codename:
+        return None
+    for release in releases:
+        if release.get("draft") or release.get("prerelease"):
+            continue
+        for asset in release.get("assets", []):
+            name = asset.get("name", "")
+            if "_%s_" % codename in name and re.search(r"arm64\.(tar|tar\.gz|tar\.xz)$", name):
+                return name, asset["browser_download_url"]
+    return None
+
+
+def hangover_steps(log=None):
+    """On ARM64 Debian/Ubuntu, download Hangover so x86 Windows games (most of them) can run."""
+    codename = system.read_os_release().get("VERSION_CODENAME")
+    picked = pick_hangover_asset(_fetch_json(HANGOVER_RELEASES_API), codename)
+    if not picked:
+        raise RuntimeError("no Hangover build for this distro (%s)" % (codename or "unknown"))
+    name, url = picked
+    tmp = tempfile.mkdtemp(prefix="beer-hangover-")
+    os.chmod(tmp, 0o755)  # apt's sandbox user must be able to read the .deb files
+    archive = os.path.join(tmp, name)
+    _log(log, "Downloading %s ..." % name)
+    _download(url, archive)
+    subprocess.check_call(["tar", "-xf", archive, "-C", tmp])
+    debs = sorted(glob.glob(os.path.join(tmp, "**", "*.deb"), recursive=True))
+    if not debs:
+        raise RuntimeError("the Hangover download contained no packages")
+    for path in [tmp] + debs:
+        os.chmod(path, 0o755 if os.path.isdir(path) else 0o644)
+    return [
+        [["apt-get", "update"]],
+        [["apt-get", "install", "-y"] + debs],
+    ]
 
 
 # --------------------------------------------------------------------------- macOS
@@ -339,13 +410,25 @@ def install_wine(log=print, dry_run=False):
             _log(log, "Install Wine with your distribution's tools (package name is usually 'wine'), "
                       "or via Flatpak: flatpak install flathub org.winehq.Wine")
             return False
-        if steps and not system.sudo_prefix() and os.geteuid() != 0:
-            _log(log, "Installing Wine needs administrator rights, but neither sudo nor doas was found.")
-            return False
-        _log(log, "Installing Wine with %s (you may be asked for your password)..." % pm)
-        ok = _run_steps(steps, log, dry_run=dry_run)
-        if dry_run:
-            return ok
+        if is_arm_linux() and not dry_run:
+            if pm == "apt-get":
+                try:
+                    _log(log, "ARM computer detected: installing Hangover, a Wine build that can run "
+                              "normal (x86) Windows programs on ARM.")
+                    if _run_steps(hangover_steps(log), log) and find_wine():
+                        _log(log, "Hangover installed.")
+                        steps = []
+                except Exception as exc:
+                    _log(log, "Hangover could not be installed (%s); using the distro's Wine." % exc)
+            else:
+                _log(log, "Note: on ARM Linux, your distro's Wine only runs ARM Windows programs. "
+                          "For normal (x86) games install Hangover (github.com/AndreRH/hangover) "
+                          "or box64/FEX-Emu.")
+        if steps:
+            _log(log, "Installing Wine with %s (you may be asked for your password)..." % pm)
+            ok = _run_steps(steps, log, dry_run=dry_run)
+            if dry_run:
+                return ok
     found = find_wine()
     if found:
         _log(log, "Wine is ready: %s (%s)" % (found, wine_version(found) or "unknown version"))

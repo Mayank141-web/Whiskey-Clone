@@ -7,7 +7,7 @@ class Beer < Formula
   desc "Run Windows apps and games (like Pokemon fan games) on macOS and Linux via Wine"
   homepage "https://github.com/Mayank141-web/Whiskey-Clone"
   url "https://github.com/Mayank141-web/Whiskey-Clone.git",
-      tag: "v1.0.0"
+      tag: "v1.1.0"
   license "MIT"
   head "https://github.com/Mayank141-web/Whiskey-Clone.git", branch: "main"
 

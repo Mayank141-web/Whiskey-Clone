@@ -110,6 +110,35 @@ class WineTests(unittest.TestCase):
         self.assertIsNone(wine.pick_mac_wine_asset([]))
 
 
+class InstallerTests(TempHome):
+    def test_steps_to_script(self):
+        script = wine.steps_to_script([[["apt-get", "update"]], [["a", "x y"], ["b"]]])
+        self.assertIn("{ apt-get update; } || exit 1", script)
+        self.assertIn("{ a 'x y'; } || { b; } || exit 1", script)
+
+    def test_pick_hangover_asset(self):
+        releases = [{"assets": [
+            {"name": "hangover_10.14_debian12_bookworm_arm64.tar", "browser_download_url": "deb"},
+            {"name": "hangover_10.14_ubuntu2404_noble_arm64.tar", "browser_download_url": "noble"},
+        ]}]
+        self.assertEqual(wine.pick_hangover_asset(releases, "noble")[1], "noble")
+        self.assertIsNone(wine.pick_hangover_asset(releases, "jammy"))
+        self.assertIsNone(wine.pick_hangover_asset(releases, None))
+
+    def test_install_suggestion(self):
+        with mock.patch.dict(os.environ, {"XDG_DATA_HOME": os.path.join(self.tmp, "xdg")}):
+            os.environ.pop("APPIMAGE", None)
+            os.environ.pop("BEER_APP_BUNDLE", None)
+            self.assertIsNone(desktop.install_suggestion())
+            os.environ["APPIMAGE"] = self.touch("Beer.AppImage")
+            self.assertEqual(desktop.install_suggestion(), "appimage")
+            del os.environ["APPIMAGE"]
+            os.environ["BEER_APP_BUNDLE"] = "/Volumes/Beer/Beer.app"
+            self.assertEqual(desktop.install_suggestion(), "mac-move")
+            os.environ["BEER_APP_BUNDLE"] = "/Applications/Beer.app"
+            self.assertIsNone(desktop.install_suggestion())
+
+
 class CliTests(TempHome):
     def test_help_and_list(self):
         with self.assertRaises(SystemExit):

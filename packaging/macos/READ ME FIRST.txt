@@ -1,0 +1,22 @@
+Installing Beer
+===============
+
+1. Drag "Beer" onto the "Applications" folder next to it.
+2. Open Beer from Launchpad or your Applications folder.
+
+The first time you open it, macOS may say it "cannot verify" Beer, because
+Beer is free software that isn't registered with Apple. To open it anyway:
+
+  - Click "Done" (or "OK") in that message.
+  - Open System Settings > Privacy & Security.
+  - Scroll down and click "Open Anyway" next to the message about Beer.
+  - Enter your password, then click "Open Anyway" again.
+
+You only need to do this once.
+
+When Beer starts it offers to install Wine (the part that runs Windows
+programs). Say yes, and enter your password if asked. On Apple Silicon Macs
+this also installs Rosetta 2.
+
+To play a Pokemon fan game, click "Add Pokemon Game" and choose the game's
+folder or the .zip/.rar/.7z file you downloaded.

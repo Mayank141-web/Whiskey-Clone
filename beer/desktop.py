@@ -20,8 +20,25 @@ EXE_MIME_TYPES = [
 ]
 
 
+def appimage_path():
+    """Path of the Beer AppImage we are running from (Linux), if any."""
+    return os.environ.get("APPIMAGE")
+
+
+def mac_bundle_path():
+    """Path of the Beer.app we are running from (macOS download), if any."""
+    return os.environ.get("BEER_APP_BUNDLE")
+
+
+def installed_appimage_path():
+    return os.path.expanduser("~/Applications/Beer.AppImage")
+
+
 def launcher_command():
     """The command that starts Beer as it is installed right now."""
+    if appimage_path():
+        installed = installed_appimage_path()
+        return [installed if os.path.exists(installed) else appimage_path()]
     exe = shutil.which("beer")
     if exe:
         return [os.path.abspath(exe)]
@@ -77,7 +94,7 @@ def make_linux_desktop_entry(apps_dir=None):
     data = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
     apps_dir = apps_dir or os.path.join(data, "applications")
     os.makedirs(apps_dir, exist_ok=True)
-    cmd = " ".join(_sh_quote(a) if " " in a else a for a in launcher_command())
+    cmd = " ".join('"%s"' % a if " " in a else a for a in launcher_command())
     icon = "beer"
     if os.path.exists(ICON_SVG):
         icon_dir = os.path.join(data, "icons", "hicolor", "scalable", "apps")
@@ -108,7 +125,38 @@ def desktop_entry(exec_cmd="beer gui", icon="beer"):
     )
 
 
+def desktop_entry_path():
+    data = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
+    return os.path.join(data, "applications", "beer.desktop")
+
+
+def install_appimage():
+    """Copy the running AppImage to ~/Applications and add it to the app menu."""
+    source = appimage_path()
+    dest = installed_appimage_path()
+    if source and os.path.abspath(source) != dest:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copy2(source, dest + ".tmp")
+        os.replace(dest + ".tmp", dest)
+        os.chmod(dest, os.stat(dest).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    return make_linux_desktop_entry()
+
+
+def install_suggestion():
+    """What the app should offer on start: 'appimage' (add to menu) or 'mac-move' (drag to Applications)."""
+    if appimage_path() and not os.path.exists(desktop_entry_path()):
+        return "appimage"
+    bundle = mac_bundle_path()
+    if bundle and (bundle.startswith("/Volumes/") or "/AppTranslocation/" in bundle):
+        return "mac-move"
+    return None
+
+
 def make_shortcut():
     if system.is_macos():
+        if mac_bundle_path():
+            return mac_bundle_path()  # already a real app
         return make_macos_app()
+    if appimage_path():
+        return install_appimage()
     return make_linux_desktop_entry()

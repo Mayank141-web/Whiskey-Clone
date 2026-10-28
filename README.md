@@ -6,6 +6,23 @@ Like Whisky, Beer uses [Wine](https://www.winehq.org), the open-source layer tha
 
 ## Install
 
+### Easiest: download a file (no terminal)
+
+Get the right file from the [Releases page](https://github.com/Mayank141-web/Whiskey-Clone/releases/latest):
+
+| Your computer | Download | Then |
+|---|---|---|
+| **Mac**: Apple Silicon or Intel | `Beer-macOS.dmg` | Open it and drag **Beer** into **Applications**. If macOS says it can't verify Beer, go to **System Settings → Privacy & Security** and click **Open Anyway** (only needed once). |
+| **Linux**: Intel/AMD PC, any distro | `Beer-x86_64.AppImage` | Right-click → **Properties → Permissions** → **Allow executing as program**, then double-click. Beer offers to add itself to your app menu. |
+| **Linux**: ARM (Raspberry Pi 4/5, ARM laptops), any distro | `Beer-aarch64.AppImage` | Same as above. |
+| **Debian / Ubuntu / Mint** | `beer_*_all.deb` | Double-click to open in your Software app, then click **Install**. |
+| **Fedora / openSUSE** | `beer-*.noarch.rpm` | Double-click to open in Software, then click **Install**. |
+| **FreeBSD** | `beer-*.pkg` | `sudo pkg add beer-*.pkg` |
+
+The Mac app and the AppImages include their own Python, so nothing else is needed. The first time Beer opens, it offers to install Wine. Click **Yes** and enter your password in the pop-up.
+
+**ARM computers:** on Apple Silicon Macs, Wine runs through Rosetta 2, which Beer installs. On ARM Linux with Debian/Ubuntu, Beer installs [Hangover](https://github.com/AndreRH/hangover) so that normal (x86) Windows games can run. On other ARM distros, you'll need Hangover, box64 or FEX-Emu yourself.
+
 ### macOS (Homebrew)
 ```bash
 brew tap mayank141-web/whiskey-clone https://github.com/Mayank141-web/Whiskey-Clone

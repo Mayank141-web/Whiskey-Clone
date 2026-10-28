@@ -6,7 +6,7 @@ import sys
 import threading
 import traceback
 
-from . import APP_NAME, __version__, bottles, games, system, wine
+from . import APP_NAME, __version__, bottles, desktop, games, system, wine
 
 try:
     import tkinter as tk
@@ -30,6 +30,7 @@ class App(object):
         self.refresh()
         self.refresh_wine()
         root.after(100, self._pump)
+        root.after(800, self.offer_install)
         if system.is_macos():
             root.createcommand("::tk::mac::OpenDocument", lambda *paths: self.open_files(paths))
 
@@ -205,11 +206,39 @@ class App(object):
         for p in bottle.programs:
             self.programs.insert("", "end", text=p["name"], values=(p["path"],))
 
+    # ----------------------------------------------------------------- first run
+    def offer_install(self):
+        suggestion = desktop.install_suggestion()
+        if suggestion == "appimage":
+            if messagebox.askyesno(APP_NAME, "Add Beer to your app menu?\n\n"
+                                   "Beer will be copied to ~/Applications so you can delete the download."):
+                try:
+                    desktop.install_appimage()
+                    self.log("Beer was added to your app menu.")
+                except OSError as exc:
+                    messagebox.showerror(APP_NAME, "Could not add Beer to the app menu: %s" % exc)
+            else:
+                # Don't ask again: an empty marker file is enough.
+                try:
+                    path = desktop.desktop_entry_path()
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    if not os.path.exists(path):
+                        with open(path, "w") as fh:
+                            fh.write("[Desktop Entry]\nType=Application\nName=Beer\nNoDisplay=true\nHidden=true\n")
+                except OSError:
+                    pass
+        elif suggestion == "mac-move":
+            messagebox.showinfo(APP_NAME, "Tip: drag Beer into your Applications folder so it's "
+                                "always there in Launchpad. You can then eject the Beer disk image.")
+        if not wine.find_wine():
+            if messagebox.askyesno(APP_NAME, "Beer needs Wine to run Windows programs. Install it now?\n\n"
+                                   "(You may be asked for your password.)"):
+                self.install_wine()
+
     # ----------------------------------------------------------------- actions
     def install_wine(self):
         self.install_btn.configure(state="disabled")
-        self.log("Installing Wine. On Linux/FreeBSD your password may be asked in the terminal "
-                 "that started Beer.")
+        self.log("Installing Wine. This can take a few minutes; you may be asked for your password.")
         self.background(lambda: wine.install_wine(log=self.log), done=self.refresh_wine)
 
     def new_bottle(self):
