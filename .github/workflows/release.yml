@@ -1,36 +1,54 @@
 name: Release
 
+# Publishes a GitHub release for the version in whiskey/__init__.py whenever a
+# commit with a not-yet-released version lands (or a v* tag is pushed).
 on:
   push:
+    branches: [main, "claude/kind-galileo-azb9v0"]
     tags: ["v*"]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to (re)publish, e.g. v1.0.0"
-        required: true
 
 permissions:
   contents: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      exists: ${{ steps.version.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v$(python3 -c 'import whiskey; print(whiskey.__version__)')"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+             && [ "$GITHUB_REF_TYPE" != tag ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists - nothing to do."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: check
+    if: needs.check.outputs.exists != 'true'
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.tag || github.ref }}
       - run: python3 -m unittest discover -s tests -v
 
   release:
-    needs: test
+    needs: [check, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.tag || github.ref }}
       - name: Install packaging tools
         run: sudo apt-get update -q && sudo apt-get install -y rpm
       - name: Build release files
@@ -38,10 +56,11 @@ jobs:
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag || github.ref_name }}
+          TAG: ${{ needs.check.outputs.tag }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/* --clobber
           else
-            gh release create "$TAG" dist/* --title "Whiskey ${TAG#v}" --notes-file packaging/RELEASE_NOTES.md --latest
+            gh release create "$TAG" dist/* --target "$GITHUB_SHA" \
+              --title "Whiskey ${TAG#v}" --notes-file packaging/RELEASE_NOTES.md --latest
           fi

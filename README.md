@@ -99,6 +99,6 @@ make dist           # build dist/ (tar.gz, .deb, .rpm, PKGBUILD, formula, checks
 python3 -m whiskey  # run from the source checkout
 ```
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`, which tests the code, builds every package and publishes a GitHub release.
+Pushing a commit with a new version number in `whiskey/__init__.py` (or a `v*` tag) runs `.github/workflows/release.yml`, which tests the code, builds every package and publishes a GitHub release.
 
 Whiskey is written in plain Python 3.8+ with Tkinter and has no other dependencies. Licensed under MIT. Whiskey is not affiliated with Whisky, CodeWeavers, WineHQ, Nintendo or The Pokémon Company.
