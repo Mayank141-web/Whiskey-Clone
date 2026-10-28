@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 -m unittest discover -s tests -v
       - name: Install with the installer script
-        run: sudo sh install.sh --no-deps --no-wine && whiskey --version && whiskey doctor || true
+        run: sudo sh install.sh --no-deps --no-wine && beer --version && beer doctor || true
 
   freebsd:
     runs-on: ubuntu-latest
@@ -28,4 +28,4 @@ jobs:
           run: |
             python3 -m unittest discover -s tests -v
             sh install.sh --no-deps --no-wine
-            whiskey --version
+            beer --version

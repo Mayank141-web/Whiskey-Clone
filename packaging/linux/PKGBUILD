@@ -1,5 +1,5 @@
 # Arch Linux / Manjaro / EndeavourOS:  makepkg -si
-pkgname=whiskey
+pkgname=beer
 pkgver=@VERSION@
 pkgrel=1
 pkgdesc="Run Windows apps and games (like Pokemon fan games) with Wine"
@@ -7,13 +7,13 @@ arch=('any')
 url="https://github.com/Mayank141-web/Whiskey-Clone"
 license=('MIT')
 depends=('python' 'tk')
-optdepends=('wine: runs the Windows programs (or use: whiskey install-wine)'
+optdepends=('wine: runs the Windows programs (or use: beer install-wine)'
             'winetricks: install Windows components'
             '7zip: unpack .7z/.rar game downloads')
-source=("whiskey-$pkgver.tar.gz::https://github.com/Mayank141-web/Whiskey-Clone/releases/download/v$pkgver/whiskey-$pkgver.tar.gz")
+source=("beer-$pkgver.tar.gz::https://github.com/Mayank141-web/Whiskey-Clone/releases/download/v$pkgver/beer-$pkgver.tar.gz")
 sha256sums=('@SHA256@')
 
 package() {
-  cd "whiskey-$pkgver"
+  cd "beer-$pkgver"
   make install DESTDIR="$pkgdir" PREFIX=/usr
 }

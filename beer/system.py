@@ -24,15 +24,15 @@ def is_apple_silicon():
 
 
 def data_dir():
-    """Where Whiskey keeps its bottles, Wine runtime and games."""
-    override = os.environ.get("WHISKEY_HOME")
+    """Where Beer keeps its bottles, Wine runtime and games."""
+    override = os.environ.get("BEER_HOME")
     if override:
         return os.path.abspath(os.path.expanduser(override))
     home = os.path.expanduser("~")
     if is_macos():
-        return os.path.join(home, "Library", "Application Support", "Whiskey")
+        return os.path.join(home, "Library", "Application Support", "Beer")
     xdg = os.environ.get("XDG_DATA_HOME") or os.path.join(home, ".local", "share")
-    return os.path.join(xdg, "whiskey")
+    return os.path.join(xdg, "beer")
 
 
 def bottles_dir():
@@ -40,12 +40,12 @@ def bottles_dir():
 
 
 def runtime_dir():
-    """Wine builds downloaded by Whiskey itself (used on macOS)."""
+    """Wine builds downloaded by Beer itself (used on macOS)."""
     return os.path.join(data_dir(), "Wine")
 
 
 def games_dir():
-    """Games extracted from archives by Whiskey."""
+    """Games extracted from archives by Beer."""
     return os.path.join(data_dir(), "Games")
 
 

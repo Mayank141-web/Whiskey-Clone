@@ -241,7 +241,7 @@ def list_bottles():
 def get_bottle(name):
     path = os.path.join(system.bottles_dir(), safe_name(name))
     if not os.path.isdir(path):
-        raise BottleError("There is no bottle called %r. Create it with: whiskey bottle create %s"
+        raise BottleError("There is no bottle called %r. Create it with: beer bottle create %s"
                           % (name, name))
     return Bottle(path)
 

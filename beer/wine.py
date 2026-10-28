@@ -1,6 +1,6 @@
 """Finding and installing Wine, the compatibility layer that actually runs Windows programs.
 
-Whiskey does not translate Windows programs itself: Wine does. Whiskey's job is to get a
+Beer does not translate Windows programs itself: Wine does. Beer's job is to get a
 working Wine onto the machine and drive it so you never have to touch a terminal.
 """
 
@@ -61,7 +61,7 @@ def _pick_binary(bindir):
 
 def find_wine():
     """Return the path of the wine executable to use, or None."""
-    override = os.environ.get("WHISKEY_WINE")
+    override = os.environ.get("BEER_WINE")
     if override and os.access(override, os.X_OK):
         return override
     if system.is_macos():
@@ -82,7 +82,7 @@ def require_wine():
     path = find_wine()
     if not path:
         raise WineNotFound(
-            "Wine is not installed yet. Run 'whiskey install-wine' "
+            "Wine is not installed yet. Run 'beer install-wine' "
             "(or click 'Install Wine' in the app)."
         )
     return path
@@ -117,7 +117,7 @@ def find_winetricks():
 
 
 def install_winetricks(log=None):
-    """Download winetricks into Whiskey's own folder if the system doesn't have it."""
+    """Download winetricks into Beer's own folder if the system doesn't have it."""
     existing = find_winetricks()
     if existing:
         return existing
@@ -226,7 +226,7 @@ def _download(url, dest):
     if system.which("curl"):
         subprocess.check_call(["curl", "-fL", "--retry", "3", "-o", dest, url])
         return
-    req = urllib.request.Request(url, headers={"User-Agent": "Whiskey"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Beer"})
     with urllib.request.urlopen(req) as resp, open(dest, "wb") as out:
         shutil.copyfileobj(resp, out)
 
@@ -235,7 +235,7 @@ def _fetch_json(url):
     if system.which("curl"):
         out = subprocess.check_output(["curl", "-fsSL", "-H", "Accept: application/vnd.github+json", url])
         return json.loads(out.decode("utf-8"))
-    req = urllib.request.Request(url, headers={"User-Agent": "Whiskey"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Beer"})
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
@@ -287,7 +287,7 @@ def install_wine_macos(log=None):
             raise RuntimeError("no macOS Wine build found in the release list")
         name, url = picked
         _log(log, "Downloading %s ..." % name)
-        tmp = tempfile.mkdtemp(prefix="whiskey-")
+        tmp = tempfile.mkdtemp(prefix="beer-")
         archive = os.path.join(tmp, name)
         _download(url, archive)
         _log(log, "Unpacking...")

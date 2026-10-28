@@ -63,7 +63,7 @@ def archive_stem(path):
 
 
 def extract_archive(path, dest_root=None, log=None):
-    """Unpack a downloaded game archive into Whiskey's Games folder and return the folder."""
+    """Unpack a downloaded game archive into Beer's Games folder and return the folder."""
     dest_root = dest_root or system.games_dir()
     dest = os.path.join(dest_root, archive_stem(path))
     if os.path.isdir(dest) and os.listdir(dest):

@@ -1,4 +1,4 @@
-"""Command line interface. Run 'whiskey --help' for usage."""
+"""Command line interface. Run 'beer --help' for usage."""
 
 import argparse
 import os
@@ -7,13 +7,13 @@ import sys
 from . import APP_NAME, REPO_URL, __version__, bottles, desktop, games, system, wine
 
 EPILOG = """examples:
-  whiskey                               open the app window
-  whiskey install-wine                  install Wine (one time)
-  whiskey pokemon ~/Downloads/Pokemon_Reborn.zip
+  beer                               open the app window
+  beer install-wine                  install Wine (one time)
+  beer pokemon ~/Downloads/Pokemon_Reborn.zip
                                         unpack, set up and play a Pokemon fan game
-  whiskey run setup.exe                 run any Windows program
-  whiskey launch "Pokemon Reborn"       start a game you already added
-  whiskey list                          show bottles and their games
+  beer run setup.exe                 run any Windows program
+  beer launch "Pokemon Reborn"       start a game you already added
+  beer list                          show bottles and their games
 """
 
 
@@ -41,7 +41,7 @@ def cmd_doctor(args):
     if exe:
         print("Wine:        %s (%s)" % (exe, wine.wine_version(exe) or "version unknown"))
     else:
-        print("Wine:        NOT INSTALLED - run 'whiskey install-wine'")
+        print("Wine:        NOT INSTALLED - run 'beer install-wine'")
     print("Winetricks:  %s" % (wine.find_winetricks() or "not installed (downloaded automatically when needed)"))
     pm = wine.detect_package_manager()
     print("Packages:    %s" % (pm or "no supported package manager found"))
@@ -103,7 +103,7 @@ def cmd_bottle(args):
 def cmd_list(args):
     all_bottles = bottles.list_bottles()
     if not all_bottles:
-        print("No bottles yet. Create one with 'whiskey bottle create NAME' or just run a program.")
+        print("No bottles yet. Create one with 'beer bottle create NAME' or just run a program.")
         return 0
     for b in all_bottles:
         print("%s  [%s]" % (b.name, b.config["windows_version"]))
@@ -128,7 +128,7 @@ def cmd_run(args):
 def cmd_pokemon(args):
     _, name, proc = games.setup_pokemon_game(
         args.path, bottle_name=args.bottle, name=args.name, launch=not args.no_launch, log=_log)
-    _log("Next time just run:  whiskey launch \"%s\"" % name)
+    _log("Next time just run:  beer launch \"%s\"" % name)
     return 0
 
 
@@ -153,7 +153,7 @@ def cmd_launch(args):
             b.launch_program(args.name)
             _log("Started '%s' in bottle '%s'." % (args.name, b.name))
             return 0
-    raise bottles.BottleError("No game or program called %r. See 'whiskey list'." % args.name)
+    raise bottles.BottleError("No game or program called %r. See 'beer list'." % args.name)
 
 
 def cmd_tool(args):
@@ -188,12 +188,12 @@ def cmd_version(args):
 
 def build_parser():
     p = argparse.ArgumentParser(
-        prog="whiskey", formatter_class=argparse.RawDescriptionHelpFormatter, epilog=EPILOG,
+        prog="beer", formatter_class=argparse.RawDescriptionHelpFormatter, epilog=EPILOG,
         description="Run Windows apps and games on macOS, Linux and FreeBSD (powered by Wine).")
     p.add_argument("--version", action="version", version="%s %s" % (APP_NAME, __version__))
     sub = p.add_subparsers(dest="command", metavar="COMMAND")
 
-    s = sub.add_parser("gui", help="open the Whiskey window")
+    s = sub.add_parser("gui", help="open the Beer window")
     s.add_argument("files", nargs="*", help="Windows programs to open")
     s.set_defaults(func=cmd_gui)
 
@@ -277,7 +277,7 @@ def build_parser():
             s.add_argument("--open", action="store_true")
         s.set_defaults(func=cmd_tool)
 
-    s = sub.add_parser("shortcut", help="add Whiskey to Applications (macOS) or the app menu (Linux/FreeBSD)")
+    s = sub.add_parser("shortcut", help="add Beer to Applications (macOS) or the app menu (Linux/FreeBSD)")
     s.set_defaults(func=cmd_shortcut)
 
     s = sub.add_parser("version", help="show the version")
@@ -288,7 +288,7 @@ def build_parser():
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     parser = build_parser()
-    # 'whiskey Game.exe' (e.g. from "Open with") behaves like 'whiskey gui Game.exe'.
+    # 'beer Game.exe' (e.g. from "Open with") behaves like 'beer gui Game.exe'.
     if argv and not argv[0].startswith("-") and argv[0] not in parser._subparsers._group_actions[0].choices:
         argv = ["gui"] + argv
     if not argv:
@@ -301,7 +301,7 @@ def main(argv=None):
     try:
         return args.func(args) or 0
     except (bottles.BottleError, wine.WineNotFound, FileNotFoundError, RuntimeError, ValueError) as exc:
-        print("whiskey: %s" % exc, file=sys.stderr)
+        print("beer: %s" % exc, file=sys.stderr)
         return 1
     except KeyboardInterrupt:
         return 130

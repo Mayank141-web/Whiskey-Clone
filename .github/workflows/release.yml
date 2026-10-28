@@ -1,6 +1,6 @@
 name: Release
 
-# Publishes a GitHub release for the version in whiskey/__init__.py whenever a
+# Publishes a GitHub release for the version in beer/__init__.py whenever a
 # commit with a not-yet-released version lands (or a v* tag is pushed).
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v$(python3 -c 'import whiskey; print(whiskey.__version__)')"
+          TAG="v$(python3 -c 'import beer; print(beer.__version__)')"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
              && [ "$GITHUB_REF_TYPE" != tag ]; then
@@ -62,5 +62,5 @@ jobs:
             gh release upload "$TAG" dist/* --clobber
           else
             gh release create "$TAG" dist/* --target "$GITHUB_SHA" \
-              --title "Whiskey ${TAG#v}" --notes-file packaging/RELEASE_NOTES.md --latest
+              --title "Beer ${TAG#v}" --notes-file packaging/RELEASE_NOTES.md --latest
           fi

@@ -4,6 +4,6 @@ if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database -q /usr/share/applications || true
 fi
 if ! command -v wine >/dev/null 2>&1; then
-    echo "Whiskey: Wine is not installed yet. Run 'whiskey install-wine' or open Whiskey and click 'Install Wine'."
+    echo "Beer: Wine is not installed yet. Run 'beer install-wine' or open Beer and click 'Install Wine'."
 fi
 exit 0

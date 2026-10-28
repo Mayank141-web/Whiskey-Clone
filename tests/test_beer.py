@@ -6,13 +6,13 @@ import unittest
 import zipfile
 from unittest import mock
 
-from whiskey import bottles, cli, desktop, games, wine
+from beer import bottles, cli, desktop, games, wine
 
 
 class TempHome(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
-        self.env = mock.patch.dict(os.environ, {"WHISKEY_HOME": os.path.join(self.tmp, "home")})
+        self.env = mock.patch.dict(os.environ, {"BEER_HOME": os.path.join(self.tmp, "home")})
         self.env.start()
 
     def tearDown(self):
@@ -121,7 +121,7 @@ class CliTests(TempHome):
 
     def test_desktop_entry(self):
         entry = desktop.desktop_entry()
-        self.assertIn("Exec=whiskey gui %f", entry)
+        self.assertIn("Exec=beer gui %f", entry)
         self.assertIn("application/x-ms-dos-executable", entry)
 
 

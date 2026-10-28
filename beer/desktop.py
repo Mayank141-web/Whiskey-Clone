@@ -1,4 +1,4 @@
-"""Desktop integration: a Whiskey.app on macOS, a menu entry + 'Open with' on Linux/FreeBSD."""
+"""Desktop integration: a Beer.app on macOS, a menu entry + 'Open with' on Linux/FreeBSD."""
 
 import os
 import plistlib
@@ -9,7 +9,7 @@ import sys
 
 from . import APP_NAME, __version__, system
 
-ICON_SVG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "whiskey.svg")
+ICON_SVG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "beer.svg")
 
 EXE_MIME_TYPES = [
     "application/x-ms-dos-executable",
@@ -21,12 +21,12 @@ EXE_MIME_TYPES = [
 
 
 def launcher_command():
-    """The command that starts Whiskey as it is installed right now."""
-    exe = shutil.which("whiskey")
+    """The command that starts Beer as it is installed right now."""
+    exe = shutil.which("beer")
     if exe:
         return [os.path.abspath(exe)]
     pkg_parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return ["env", "PYTHONPATH=" + pkg_parent, sys.executable, "-m", "whiskey"]
+    return ["env", "PYTHONPATH=" + pkg_parent, sys.executable, "-m", "beer"]
 
 
 def _sh_quote(arg):
@@ -34,7 +34,7 @@ def _sh_quote(arg):
 
 
 def make_macos_app(dest_dir=None):
-    """Build ~/Applications/Whiskey.app. Built locally, so Gatekeeper never quarantines it."""
+    """Build ~/Applications/Beer.app. Built locally, so Gatekeeper never quarantines it."""
     dest_dir = dest_dir or os.path.expanduser("~/Applications")
     app = os.path.join(dest_dir, APP_NAME + ".app")
     if os.path.exists(app):
@@ -52,7 +52,7 @@ def make_macos_app(dest_dir=None):
     info = {
         "CFBundleName": APP_NAME,
         "CFBundleDisplayName": APP_NAME,
-        "CFBundleIdentifier": "io.github.mayank141-web.whiskey",
+        "CFBundleIdentifier": "io.github.mayank141-web.beer",
         "CFBundleVersion": __version__,
         "CFBundleShortVersionString": __version__,
         "CFBundleExecutable": APP_NAME,
@@ -73,17 +73,17 @@ def make_macos_app(dest_dir=None):
 
 
 def make_linux_desktop_entry(apps_dir=None):
-    """Install a menu entry so Whiskey shows up in the app launcher and in 'Open with'."""
+    """Install a menu entry so Beer shows up in the app launcher and in 'Open with'."""
     data = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
     apps_dir = apps_dir or os.path.join(data, "applications")
     os.makedirs(apps_dir, exist_ok=True)
     cmd = " ".join(_sh_quote(a) if " " in a else a for a in launcher_command())
-    icon = "whiskey"
+    icon = "beer"
     if os.path.exists(ICON_SVG):
         icon_dir = os.path.join(data, "icons", "hicolor", "scalable", "apps")
         os.makedirs(icon_dir, exist_ok=True)
-        shutil.copy2(ICON_SVG, os.path.join(icon_dir, "whiskey.svg"))
-    path = os.path.join(apps_dir, "whiskey.desktop")
+        shutil.copy2(ICON_SVG, os.path.join(icon_dir, "beer.svg"))
+    path = os.path.join(apps_dir, "beer.desktop")
     with open(path, "w") as fh:
         fh.write(desktop_entry(cmd + " gui", icon))
     if shutil.which("update-desktop-database"):
@@ -92,11 +92,11 @@ def make_linux_desktop_entry(apps_dir=None):
     return path
 
 
-def desktop_entry(exec_cmd="whiskey gui", icon="whiskey"):
+def desktop_entry(exec_cmd="beer gui", icon="beer"):
     return (
         "[Desktop Entry]\n"
         "Type=Application\n"
-        "Name=Whiskey\n"
+        "Name=Beer\n"
         "GenericName=Windows Program Runner\n"
         "Comment=Run Windows apps and games (like Pokemon fan games) with Wine\n"
         "Exec=%s %%f\n"

@@ -1,4 +1,4 @@
-"""The Whiskey window (Tkinter, so it works on macOS, Linux and FreeBSD without extra installs)."""
+"""The Beer window (Tkinter, so it works on macOS, Linux and FreeBSD without extra installs)."""
 
 import os
 import queue
@@ -209,7 +209,7 @@ class App(object):
     def install_wine(self):
         self.install_btn.configure(state="disabled")
         self.log("Installing Wine. On Linux/FreeBSD your password may be asked in the terminal "
-                 "that started Whiskey.")
+                 "that started Beer.")
         self.background(lambda: wine.install_wine(log=self.log), done=self.refresh_wine)
 
     def new_bottle(self):
@@ -319,15 +319,15 @@ class App(object):
 
 def main(files=None):
     if tk is None:
-        print("The Whiskey window needs Tkinter. Install it (Debian/Ubuntu: sudo apt install python3-tk, "
+        print("The Beer window needs Tkinter. Install it (Debian/Ubuntu: sudo apt install python3-tk, "
               "Fedora: sudo dnf install python3-tkinter, Arch: sudo pacman -S tk, FreeBSD: sudo pkg install "
-              "py311-tkinter, macOS: brew install python-tk), or use the commands shown by 'whiskey --help'.",
+              "py311-tkinter, macOS: brew install python-tk), or use the commands shown by 'beer --help'.",
               file=sys.stderr)
         return 1
     try:
         root = tk.Tk()
     except tk.TclError as exc:
-        print("Could not open a window (%s). Use 'whiskey --help' for terminal commands." % exc, file=sys.stderr)
+        print("Could not open a window (%s). Use 'beer --help' for terminal commands." % exc, file=sys.stderr)
         return 1
     app = App(root)
     if files:

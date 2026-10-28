@@ -1,5 +1,5 @@
 #!/bin/sh
-# Whiskey installer for Linux (any distro), FreeBSD and macOS.
+# Beer installer for Linux (any distro), FreeBSD and macOS.
 #
 #   curl -fsSL https://github.com/Mayank141-web/Whiskey-Clone/releases/latest/download/install.sh | sudo sh
 #
@@ -8,8 +8,8 @@
 # Options:
 #   --prefix DIR   install under DIR (default /usr/local)
 #   --no-deps      don't install Python/Tk with the package manager
-#   --no-wine      don't install Wine now (Whiskey can do it later: whiskey install-wine)
-#   --uninstall    remove Whiskey (your bottles and games are kept)
+#   --no-wine      don't install Wine now (Beer can do it later: beer install-wine)
+#   --uninstall    remove Beer (your bottles and games are kept)
 set -eu
 
 REPO="Mayank141-web/Whiskey-Clone"
@@ -35,15 +35,15 @@ say() { printf '\033[1m==> %s\033[0m\n' "$*"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
 OS="$(uname -s)"
-LIBDIR="$PREFIX/lib/whiskey"
+LIBDIR="$PREFIX/lib/beer"
 BINDIR="$PREFIX/bin"
 SHAREDIR="$PREFIX/share"
 
 if [ "$UNINSTALL" = 1 ]; then
-    rm -rf "$LIBDIR" "$BINDIR/whiskey" "$SHAREDIR/applications/whiskey.desktop" \
-           "$SHAREDIR/icons/hicolor/scalable/apps/whiskey.svg"
-    say "Whiskey removed. Your bottles are still in ~/.local/share/whiskey (Linux/FreeBSD)"
-    say "or ~/Library/Application Support/Whiskey (macOS); delete that folder to remove them too."
+    rm -rf "$LIBDIR" "$BINDIR/beer" "$SHAREDIR/applications/beer.desktop" \
+           "$SHAREDIR/icons/hicolor/scalable/apps/beer.svg"
+    say "Beer removed. Your bottles are still in ~/.local/share/beer (Linux/FreeBSD)"
+    say "or ~/Library/Application Support/Beer (macOS); delete that folder to remove them too."
     exit 0
 fi
 
@@ -54,7 +54,7 @@ fi
 
 # ---------------------------------------------------------------- dependencies
 install_deps() {
-    say "Installing Python and Tk (for the Whiskey window)..."
+    say "Installing Python and Tk (for the Beer window)..."
     if have apt-get; then
         DEBIAN_FRONTEND=noninteractive apt-get update -q && \
         DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-tk
@@ -91,44 +91,44 @@ fi
 # ---------------------------------------------------------------- get the source
 SRC=""
 SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd || true)"
-if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/whiskey/__init__.py" ]; then
+if [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/beer/__init__.py" ]; then
     SRC="$SCRIPT_DIR"
 else
     TMP="$(mktemp -d)"
     trap 'rm -rf "$TMP"' EXIT
-    if [ -n "${WHISKEY_VERSION:-}" ]; then
-        URL="https://github.com/$REPO/releases/download/$WHISKEY_VERSION/whiskey.tar.gz"
+    if [ -n "${BEER_VERSION:-}" ]; then
+        URL="https://github.com/$REPO/releases/download/$BEER_VERSION/beer.tar.gz"
     else
-        URL="https://github.com/$REPO/releases/latest/download/whiskey.tar.gz"
+        URL="https://github.com/$REPO/releases/latest/download/beer.tar.gz"
     fi
-    say "Downloading Whiskey from $URL"
-    if have curl; then curl -fsSL "$URL" -o "$TMP/whiskey.tar.gz"
-    elif have wget; then wget -qO "$TMP/whiskey.tar.gz" "$URL"
-    elif have fetch; then fetch -qo "$TMP/whiskey.tar.gz" "$URL"
-    else echo "Need curl, wget or fetch to download Whiskey." >&2; exit 1
+    say "Downloading Beer from $URL"
+    if have curl; then curl -fsSL "$URL" -o "$TMP/beer.tar.gz"
+    elif have wget; then wget -qO "$TMP/beer.tar.gz" "$URL"
+    elif have fetch; then fetch -qo "$TMP/beer.tar.gz" "$URL"
+    else echo "Need curl, wget or fetch to download Beer." >&2; exit 1
     fi
-    tar -xzf "$TMP/whiskey.tar.gz" -C "$TMP"
-    SRC="$(dirname "$(find "$TMP" -name __init__.py -path '*/whiskey/__init__.py' | head -n 1)")/.."
+    tar -xzf "$TMP/beer.tar.gz" -C "$TMP"
+    SRC="$(dirname "$(find "$TMP" -name __init__.py -path '*/beer/__init__.py' | head -n 1)")/.."
 fi
 
 # ---------------------------------------------------------------- install files
-say "Installing Whiskey into $PREFIX"
+say "Installing Beer into $PREFIX"
 rm -rf "$LIBDIR"
 mkdir -p "$LIBDIR" "$BINDIR"
-cp -R "$SRC/whiskey" "$LIBDIR/"
+cp -R "$SRC/beer" "$LIBDIR/"
 find "$LIBDIR" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
 
-cat > "$BINDIR/whiskey" <<EOF
+cat > "$BINDIR/beer" <<EOF
 #!/bin/sh
-PYTHONPATH="$LIBDIR\${PYTHONPATH:+:\$PYTHONPATH}" exec python3 -m whiskey "\$@"
+PYTHONPATH="$LIBDIR\${PYTHONPATH:+:\$PYTHONPATH}" exec python3 -m beer "\$@"
 EOF
-chmod 755 "$BINDIR/whiskey"
+chmod 755 "$BINDIR/beer"
 
 if [ "$OS" != Darwin ]; then
     mkdir -p "$SHAREDIR/applications" "$SHAREDIR/icons/hicolor/scalable/apps"
-    cp "$SRC/whiskey/resources/whiskey.svg" "$SHAREDIR/icons/hicolor/scalable/apps/whiskey.svg"
-    PYTHONPATH="$LIBDIR" python3 -c 'from whiskey.desktop import desktop_entry; print(desktop_entry(), end="")' \
-        > "$SHAREDIR/applications/whiskey.desktop"
+    cp "$SRC/beer/resources/beer.svg" "$SHAREDIR/icons/hicolor/scalable/apps/beer.svg"
+    PYTHONPATH="$LIBDIR" python3 -c 'from beer.desktop import desktop_entry; print(desktop_entry(), end="")' \
+        > "$SHAREDIR/applications/beer.desktop"
     have update-desktop-database && update-desktop-database "$SHAREDIR/applications" >/dev/null 2>&1 || true
     have gtk-update-icon-cache && gtk-update-icon-cache -q "$SHAREDIR/icons/hicolor" >/dev/null 2>&1 || true
 fi
@@ -136,12 +136,12 @@ fi
 # ---------------------------------------------------------------- Wine
 if [ "$WINE" = 1 ]; then
     if [ "$OS" = Darwin ]; then
-        say "On macOS, finish by running (without sudo):  whiskey install-wine"
+        say "On macOS, finish by running (without sudo):  beer install-wine"
     else
         say "Installing Wine (this is what actually runs Windows programs)..."
-        "$BINDIR/whiskey" install-wine || echo "Wine install failed; try again later with: whiskey install-wine" >&2
+        "$BINDIR/beer" install-wine || echo "Wine install failed; try again later with: beer install-wine" >&2
     fi
 fi
 
-say "Done! Open Whiskey from your app menu, or run:  whiskey"
-say "Play a Pokemon fan game:  whiskey pokemon ~/Downloads/YourGame.zip"
+say "Done! Open Beer from your app menu, or run:  beer"
+say "Play a Pokemon fan game:  beer pokemon ~/Downloads/YourGame.zip"
