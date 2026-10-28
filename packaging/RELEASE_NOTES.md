@@ -32,6 +32,34 @@ curl -fsSL https://github.com/Mayank141-web/Whiskey-Clone/releases/latest/downlo
 **Fedora / RHEL / openSUSE:** download the `.rpm`, then run `sudo dnf install ./beer-*.noarch.rpm` (or `sudo zypper install`)
 **Arch / Manjaro:** download `PKGBUILD` into an empty folder, then run `makepkg -si`
 
+## If the repository is private
+
+Downloads from a private repo need you to be signed in to GitHub. Do this once with the [GitHub CLI](https://cli.github.com) (on macOS: `brew install gh`; on Linux: install the `gh` package).
+
+```bash
+gh auth login
+```
+```bash
+gh auth setup-git
+```
+
+`setup-git` lets Homebrew and git use your GitHub sign-in, so the Homebrew commands above work unchanged.
+
+**Linux / FreeBSD:**
+```bash
+gh release download -R Mayank141-web/Whiskey-Clone -p install.sh -p beer.tar.gz -D /tmp/beer --clobber
+```
+```bash
+sudo sh /tmp/beer/install.sh
+```
+
+**Any download from the release (`.dmg`, `.AppImage`, `.deb` …):** you can click it on the Releases page while signed in to github.com in your browser, or run:
+```bash
+gh release download -R Mayank141-web/Whiskey-Clone -p 'Beer-macOS.dmg'
+```
+
+`install.sh` also accepts a token in `GITHUB_TOKEN`, and it automatically uses the GitHub CLI login of the person running `sudo`.
+
 ## Play a Pokémon fan game
 Open Beer, click **Add Pokémon Game** and pick the game's folder or the `.zip`, `.rar` or `.7z` file you downloaded. You can also use the terminal:
 ```bash

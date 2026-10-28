@@ -44,6 +44,34 @@ curl -fsSL https://github.com/Mayank141-web/Whiskey-Clone/releases/latest/downlo
 ```
 This installs Python/Tk, Beer and Wine using your system's package manager. It supports apt, dnf/yum, pacman, zypper, apk, xbps, emerge, eopkg, urpmi, swupd, nix and FreeBSD `pkg`. On FreeBSD without curl, use `fetch -o - <url> | sudo sh`.
 
+#### If the repository is private
+
+Downloads from a private repo need you to be signed in to GitHub. Do this once with the [GitHub CLI](https://cli.github.com) (on macOS: `brew install gh`; on Linux: install the `gh` package).
+
+```bash
+gh auth login
+```
+```bash
+gh auth setup-git
+```
+
+`setup-git` lets Homebrew and git use your GitHub sign-in, so the Homebrew commands above work unchanged.
+
+**Linux / FreeBSD:**
+```bash
+gh release download -R Mayank141-web/Whiskey-Clone -p install.sh -p beer.tar.gz -D /tmp/beer --clobber
+```
+```bash
+sudo sh /tmp/beer/install.sh
+```
+
+**Any download from the release (`.dmg`, `.AppImage`, `.deb` …):** you can click it on the Releases page while signed in to github.com in your browser, or run:
+```bash
+gh release download -R Mayank141-web/Whiskey-Clone -p 'Beer-macOS.dmg'
+```
+
+`install.sh` also accepts a token in `GITHUB_TOKEN`, and it automatically uses the GitHub CLI login of the person running `sudo`.
+
 Prefer a package? Get one from the [Releases page](https://github.com/Mayank141-web/Whiskey-Clone/releases):
 
 | Distro | Command |
