@@ -1,4 +1,5 @@
 /* Beer.app launcher: starts the bundled Python (native arm64 or x86_64) running Beer's GUI. */
+#include <fcntl.h>
 #include <libgen.h>
 #include <limits.h>
 #include <mach-o/dyld.h>
@@ -14,12 +15,18 @@ extern char **environ;
 /* Clear the download quarantine flag from the whole app once the user has opened it,
    so macOS doesn't block the Python inside it. Fails harmlessly on read-only disk images. */
 static void unquarantine(const char *bundle) {
+    if (strncmp(bundle, "/Volumes/", 9) == 0 || strstr(bundle, "/AppTranslocation/"))
+        return; /* still on the disk image: read-only, nothing to do */
     pid_t pid;
     char *args[] = {"/usr/bin/xattr", "-dr", "com.apple.quarantine", (char *)bundle, NULL};
-    if (posix_spawn(&pid, args[0], NULL, NULL, args, environ) == 0) {
+    posix_spawn_file_actions_t quiet;
+    posix_spawn_file_actions_init(&quiet);
+    posix_spawn_file_actions_addopen(&quiet, 2, "/dev/null", O_WRONLY, 0);
+    if (posix_spawn(&pid, args[0], &quiet, NULL, args, environ) == 0) {
         int status;
         waitpid(pid, &status, 0);
     }
+    posix_spawn_file_actions_destroy(&quiet);
 }
 
 int main(int argc, char **argv) {

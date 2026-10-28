@@ -77,16 +77,16 @@ jobs:
           arch -x86_64 build/macos/Beer.app/Contents/Resources/python-x86_64/bin/python3 -c "import tkinter; print('Tk', tkinter.Tcl().eval('info patchlevel'))"
       - name: Test the window opens from the disk image
         run: |
-          hdiutil attach dist/Beer-macOS.dmg -mountpoint /tmp/beerdmg
-          ls -la /tmp/beerdmg
-          /tmp/beerdmg/Beer.app/Contents/MacOS/Beer > /tmp/beer-gui.log 2>&1 &
+          hdiutil attach dist/Beer-macOS.dmg -mountpoint /Volumes/Beer
+          ls -la /Volumes/Beer
+          /Volumes/Beer/Beer.app/Contents/MacOS/Beer > /tmp/beer-gui.log 2>&1 &
           PID=$!
           sleep 15
           screencapture -x /tmp/beer-macos.png || true
           kill -0 $PID && echo "Window is running"
           kill $PID || true
           cat /tmp/beer-gui.log
-          hdiutil detach /tmp/beerdmg
+          hdiutil detach /Volumes/Beer
       - uses: actions/upload-artifact@v4
         with: {name: macos, path: dist/Beer-macOS.dmg}
       - uses: actions/upload-artifact@v4
