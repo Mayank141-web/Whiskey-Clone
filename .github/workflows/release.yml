@@ -1,7 +1,7 @@
 name: Release
 
-# Publishes a GitHub release for the version in beer/__init__.py whenever a
-# commit with a not-yet-released version lands (or a v* tag is pushed).
+# Publishes (or refreshes) the GitHub release for the version in
+# beer/__init__.py whenever the release branch or a v* tag is pushed.
 on:
   push:
     branches: [main, "claude/kind-galileo-azb9v0"]
@@ -25,8 +25,8 @@ jobs:
         run: |
           TAG="v$(python3 -c 'import beer; print(beer.__version__)')"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
-             && [ "$GITHUB_REF_TYPE" != tag ]; then
+          # Released tags are immutable once published from main; branch pushes refresh them.
+          if [ "$GITHUB_REF_NAME" = main ] && gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "Release $TAG already exists - nothing to do."
           else
@@ -59,6 +59,13 @@ jobs:
           TAG: ${{ needs.check.outputs.tag }}
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
+            # Point the tag at this commit (the Homebrew formula installs from the tag).
+            git tag -f "$TAG" "$GITHUB_SHA"
+            git push -f origin "refs/tags/$TAG"
+            gh release edit "$TAG" --title "Beer ${TAG#v}" --notes-file packaging/RELEASE_NOTES.md --latest
+            for old in $(gh release view "$TAG" --json assets --jq '.assets[].name'); do
+              [ -e "dist/$old" ] || gh release delete-asset "$TAG" "$old" --yes
+            done
             gh release upload "$TAG" dist/* --clobber
           else
             gh release create "$TAG" dist/* --target "$GITHUB_SHA" \
